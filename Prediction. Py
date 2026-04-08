@@ -1,0 +1,50 @@
+import yfinance as yf
+import datetime as dt
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+
+# 1. Download Historical Data (Example: Google/Alphabet)
+ticker = "GOOGL"
+data = yf.download(ticker, start="2023-01-01", end="2024-01-01")
+
+# 2. Preprocess Data
+# We use the 'Close' price for prediction
+df = data[['Close']].copy()
+df['Date_Ordinal'] = pd.to_datetime(df.index).map(dt.datetime.toordinal)
+
+# Define Features (X) and Target (y)
+X = np.array(df['Date_Ordinal']).reshape(-1, 1)
+y = np.array(df['Close'])
+
+# Split data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# 3. Train the Linear Regression Model
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+# 4. Make Predictions
+y_pred = model.predict(X)
+
+# 5. Predict a Future Price (e.g., 30 days after the last date)
+last_date = df['Date_Ordinal'].max()
+future_date = np.array([[last_date + 30]])
+predicted_future_price = model.predict(future_date)
+
+# 6. Visualization
+plt.figure(figsize=(12, 6))
+plt.scatter(df.index, y, color='blue', label='Actual Price', s=10)
+plt.plot(df.index, y_pred, color='red', linewidth=2, label='Linear Trend (Prediction)')
+plt.title(f'{ticker} Stock Price Prediction')
+plt.xlabel('Date')
+plt.ylabel('Price (USD)')
+plt.legend()
+plt.show()
+
+print(f"Predicted price for {ticker} in 30 days: ${predicted_future_price[0]:.2f}")
+output:
+[*********************100%%**********************]  1 of 1 completed
+Predicted price for GOOGL in 30 days: $148.42
